@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<!-- Main Menu -->
+		<menuitem id="menu_vendor_evaluation_root"
+		          name="TPM Evaluation"
+		          sequence="10"
+		          groups="tpm_score_summary.group_vem_user"
+		          web_icon="tpm_score_summary,static/description/icon.png"
+		/>
+
+		<!-- Evaluations Menu -->
+		<menuitem id="menu_vendor_evaluation_evaluations"
+		          name="TPM Evaluation"
+		          parent="menu_vendor_evaluation_root"
+		          action="action_evaluation_tree"
+		          sequence="10"/>
+
+		<!-- Configuration Menu -->
+		<menuitem id="menu_vendor_evaluation_config"
+		          name="Configuration"
+		          parent="menu_vendor_evaluation_root"
+		          sequence="90"
+		          groups="tpm_score_summary.group_vem_manager"/>
+		<!-- Questions Menu (under Configuration) -->
+		<menuitem id="menu_vendor_evaluation_questions"
+		          name="Questions Configuration"
+		          parent="menu_vendor_evaluation_config"
+		          action="action_question_tree"
+		          sequence="10"/>
+		<!-- Vendors Menu -->
+		<menuitem id="menu_vendor_evaluation_vendors"
+		          name="Team Configuration"
+		          parent="menu_vendor_evaluation_config"
+		          action="action_vendor_tree"
+		          sequence="20"/>
+	</data>
+</odoo>

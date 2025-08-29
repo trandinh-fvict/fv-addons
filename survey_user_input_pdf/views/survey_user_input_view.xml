@@ -1,0 +1,35 @@
+<odoo>
+	<record id="view_survey_user_input_form_inherit_pdf" model="ir.ui.view">
+		<field name="name">survey.user_input.form.inherit.pdf</field>
+		<field name="model">survey.user_input</field>
+		<field name="inherit_id" ref="survey.survey_user_input_view_form"/>
+		<field name="arch" type="xml">
+			<header position="inside">
+				<button name="print_survey_user_input_pdf" string="Export PDF" type="object" class="btn-primary"/>
+				<button name="action_preview_survey_user_input_pdf" string="Preview" type="object" class="btn-secondary"
+				        icon="fa-eye"/>
+			</header>
+		</field>
+	</record>
+
+	<record id="view_survey_user_input_tree_inherit_pdf" model="ir.ui.view">
+		<field name="name">survey.user.input.tree.inherit.pdf</field>
+		<field name="model">survey.user_input</field>
+		<field name="inherit_id" ref="survey.survey_user_input_view_tree"/>
+		<field name="arch" type="xml">
+			<xpath expr="//list" position="attributes">
+				<attribute name="multi_edit">1</attribute>
+			</xpath>
+			<xpath expr="//list" position="inside">
+				<header>
+					<button name="action_preview_survey_user_input_pdf" type="object" string="TPM Assistant"
+					        icon="fa-eye"/>
+				</header>
+			</xpath>
+			<!--			<xpath expr="//field[@name='state']" position="after">-->
+			<!--				<button name="action_preview_survey_user_input_pdf" type="object" string="Preview"-->
+			<!--				        icon="fa-eye"/>-->
+			<!--			</xpath>-->
+		</field>
+	</record>
+</odoo>

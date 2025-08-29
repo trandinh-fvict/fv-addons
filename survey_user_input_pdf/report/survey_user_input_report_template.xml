@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+	<template id="survey_user_input_report_template">
+		<t t-call="web.html_container">
+			<t t-call="web.basic_layout">
+				<link rel="stylesheet" type="text/css" href="/survey_user_input_pdf/static/css/report.css"/>
+				<main>
+					<div class="container-fluid">
+						<!-- Get unique partners -->
+						<t t-set="unique_partners" t-value="docs.mapped('partner_id')"/>
+
+						<t t-foreach="unique_partners" t-as="partner">
+							<t t-set="group" t-value="docs.filtered(lambda r: r.partner_id == partner)"/>
+							<div class="survey-block">
+								<div class="survey-title">
+									<t t-esc="group[0].survey_id.title"/>
+								</div>
+
+								<div class="survey-header">
+									<div class="survey-header-left">
+										<strong>User:</strong>
+										<span t-esc="group[0].partner_id.display_name or group[0].email"/>
+									</div>
+									<div class="survey-header-right">
+										<strong>Date:</strong>
+										<span t-esc="group[0].create_date" t-options="{'widget': 'datetime'}"/>
+									</div>
+									<div class="survey-header-clear"/>
+								</div>
+
+								<table>
+									<thead>
+										<tr>
+											<th class="question-header">質問・Question・Câu hỏi</th>
+											<!-- Dynamic columns based on grouped docs -->
+											<t t-foreach="group" t-as="user_input">
+												<th class="first-answer-header" t-if="user_input.user_input_line_ids">
+													<t t-set="first_answer"
+													   t-value="user_input.user_input_line_ids[0]"/>
+													<t t-if="first_answer">
+														<t t-if="first_answer.answer_type == 'text_box'">
+															<t t-esc="first_answer.value_text_box"/>
+														</t>
+														<t t-elif="first_answer.answer_type == 'numerical_box'">
+															<t t-esc="first_answer.value_numerical_box"/>
+														</t>
+														<t t-elif="first_answer.answer_type == 'suggestion'">
+															<t t-esc="first_answer.suggested_answer_id.value"/>
+														</t>
+														<t t-elif="first_answer.answer_type in ('date', 'datetime', 'matrix', 'char_box', 'scale')">
+															<t t-esc="first_answer.display_name"/>
+														</t>
+													</t>
+												</th>
+											</t>
+										</tr>
+									</thead>
+									<tbody>
+										<t t-foreach="group[0].user_input_line_ids[1:]" t-as="line">
+											<tr>
+												<td>
+													<t t-esc="line.question_id.title"/>
+												</td>
+												<t t-foreach="group" t-as="user_input">
+													<td class="answer-cell">
+														<t t-set="answer_line"
+														   t-value="user_input.user_input_line_ids.filtered(lambda l: l.question_id == line.question_id)"/>
+														<t t-if="answer_line">
+															<t t-if="answer_line.answer_type == 'text_box'">
+																<t t-esc="answer_line.value_text_box"/>
+															</t>
+															<t t-elif="answer_line.answer_type == 'numerical_box'">
+																<t t-esc="answer_line.value_numerical_box"/>
+															</t>
+															<t t-elif="answer_line.answer_type == 'suggestion'">
+																<t t-esc="answer_line.suggested_answer_id.value"/>
+															</t>
+															<t t-elif="answer_line.answer_type == 'scale'">
+																<t t-esc="answer_line.value_scale or '0'"/>
+															</t>
+														</t>
+													</td>
+												</t>
+											</tr>
+										</t>
+										<tr>
+											<td class="total-label">
+												<strong>合計点・Tổng điểm:</strong>
+											</td>
+											<t t-foreach="group" t-as="user_input">
+												<td class="total-value">
+													<t t-esc="sum(line.value_scale or 0 for line in user_input.user_input_line_ids.filtered(lambda l: l.answer_type == 'scale'))"/>
+												</td>
+											</t>
+										</tr>
+									</tbody>
+								</table>
+							</div>
+						</t>
+					</div>
+				</main>
+			</t>
+		</t>
+	</template>
+</odoo>

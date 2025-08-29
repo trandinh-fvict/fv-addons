@@ -1,0 +1,9 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_vem_vendor_user,vem.vendor user,model_vem_vendor,group_vem_user,1,0,0,0
+access_vem_vendor_manager,vem.vendor manager,model_vem_vendor,group_vem_manager,1,1,1,1
+access_vem_eval_question_user,vem.eval.question user,model_vem_eval_question,group_vem_user,1,0,0,0
+access_vem_eval_question_manager,vem.eval.question manager,model_vem_eval_question,group_vem_manager,1,1,1,1
+access_vem_evaluation_user,vem.evaluation user,model_vem_evaluation,group_vem_user,1,1,1,0
+access_vem_evaluation_manager,vem.evaluation manager,model_vem_evaluation,group_vem_manager,1,1,1,1
+access_vem_evaluation_line_user,vem.evaluation.line user,model_vem_evaluation_line,group_vem_user,1,1,1,0
+access_vem_evaluation_line_manager,vem.evaluation.line manager,model_vem_evaluation_line,group_vem_manager,1,1,1,1

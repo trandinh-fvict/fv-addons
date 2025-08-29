@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<!-- Evaluation List View -->
+		<record id="view_evaluation_tree" model="ir.ui.view">
+			<field name="name">vem.evaluation.list</field>
+			<field name="model">vem.evaluation</field>
+			<field name="arch" type="xml">
+				<list string="TPM Evaluations" decoration-info="state=='draft'"
+				      decoration-success="state=='submitted'"
+				      multi_edit="1">
+					<header>
+						<button name="action_summary_preview" type="object" string=" Summary"
+						        class="btn-primary fa fa-trophy"
+						        help=" "/>
+					</header>
+					<field name="name"/>
+					<field name="evaluator_name"/>
+					<field name="vendor_ids" widget="many2many_tags"/>
+					<field name="create_date"/>
+					<field name="write_uid"/>
+					<field name="state" widget="badge"/>
+				</list>
+			</field>
+		</record>
+
+		<!-- Evaluation Form View -->
+		<record id="view_evaluation_form" model="ir.ui.view">
+			<field name="name">vem.evaluation.form</field>
+			<field name="model">vem.evaluation</field>
+			<field name="arch" type="xml">
+				<form string="TPM Evaluation">
+					<header>
+						<button name="action_open_matrix" type="object" class="btn-primary" string="Start Evaluation"/>
+						<button name="action_submit" type="object" class="btn-success" string="Submit"
+						        confirm="Are you sure you want to submit this evaluation?"
+						        invisible="state != 'draft'"/>
+						<button name="action_reset_to_draft" type="object" class="btn-secondary" string="Reset"
+						        groups="tpm_score_summary.group_vem_manager"
+						        invisible="state != 'submitted'"/>
+						<field name="state" widget="statusbar" statusbar_visible="draft,submitted"/>
+					</header>
+					<sheet>
+						<div class="oe_button_box" name="button_box">
+							<button name="action_open_matrix" type="object" class="oe_stat_button" icon="fa-table">
+								<field name="line_count" widget="statinfo" string="Lines"/>
+							</button>
+						</div>
+
+						<div class="oe_title">
+							<h1>
+								<field name="name" readonly="1"/>
+							</h1>
+						</div>
+
+						<group>
+							<group>
+								<field name="evaluator_name"/>
+								<field name="create_date" readonly="1"/>
+							</group>
+							<group>
+								<field name="submit_date" readonly="1"/>
+								<field name="approve_date" readonly="1"/>
+							</group>
+						</group>
+						<group>
+							<field name="vendor_ids" widget="many2many_tags"/>
+						</group>
+						<field name="total_scores" invisible="1" string="Team to Evaluate"/>
+					</sheet>
+				</form>
+			</field>
+		</record>
+
+		<!-- Evaluation Search View -->
+		<record id="view_evaluation_search" model="ir.ui.view">
+			<field name="name">vem.evaluation.search</field>
+			<field name="model">vem.evaluation</field>
+			<field name="arch" type="xml">
+				<search string="Search Evaluations">
+					<field name="name"/>
+					<field name="evaluator_name"/>
+					<field name="vendor_ids"/>
+					<separator/>
+					<filter name="draft" string="Draft" domain="[('state', '=', 'draft')]"/>
+					<filter name="submitted" string="Submitted" domain="[('state', '=', 'submitted')]"/>
+					<group expand="0" string="Group By">
+						<filter name="group_by_evaluator" string="Evaluator" context="{'group_by': 'evaluator_name'}"/>
+						<filter name="group_by_state" string="State" context="{'group_by': 'state'}"/>
+					</group>
+				</search>
+			</field>
+		</record>
+
+		<!-- Evaluation Kanban View -->
+		<record id="view_evaluation_kanban" model="ir.ui.view">
+			<field name="name">vem.evaluation.kanban</field>
+			<field name="model">vem.evaluation</field>
+			<field name="arch" type="xml">
+				<kanban default_group_by="state">
+					<field name="name"/>
+					<field name="evaluator_name"/>
+					<field name="vendor_ids"/>
+					<field name="state"/>
+					<field name="create_date"/>
+					<field name="line_count"/>
+					<templates>
+						<t t-name="kanban-box">
+							<div class="oe_kanban_card oe_kanban_global_click">
+								<div class="oe_kanban_content">
+									<div class="o_kanban_record_title">
+										<strong>
+											<field name="name"/>
+										</strong>
+									</div>
+									<div class="o_kanban_record_subtitle">
+										<field name="evaluator_name"/>
+									</div>
+									<div class="o_kanban_record_subtitle">
+										<field name="vendor_ids" widget="many2many_tags"/>
+									</div>
+									<div class="o_kanban_record_bottom">
+										<div class="oe_kanban_bottom_left">
+											<field name="line_count"/>
+											lines
+										</div>
+										<div class="oe_kanban_bottom_right">
+											<field name="create_date" widget="date"/>
+										</div>
+									</div>
+								</div>
+							</div>
+						</t>
+					</templates>
+				</kanban>
+			</field>
+		</record>
+
+		<!-- Evaluation Action -->
+		<record id="action_evaluation_tree" model="ir.actions.act_window">
+			<field name="name">TPM Evaluations</field>
+			<field name="res_model">vem.evaluation</field>
+			<field name="view_mode">list,kanban,form</field>
+			<field name="view_id" ref="view_evaluation_tree"/>
+			<field name="search_view_id" ref="view_evaluation_search"/>
+			<field name="context">{}</field>
+			<field name="help" type="html">
+				<p class="o_view_nocontent_smiling_face">
+					Create your first TPM evaluation!
+				</p>
+			</field>
+		</record>
+
+		<!-- Evaluation Line List View -->
+		<record id="view_evaluation_line_tree" model="ir.ui.view">
+			<field name="name">vem.evaluation.line.list</field>
+			<field name="model">vem.evaluation.line</field>
+			<field name="arch" type="xml">
+				<list string="Evaluation Lines" create="false" delete="false">
+					<field name="evaluation_id"/>
+					<field name="question_sequence"/>
+					<field name="question_name"/>
+					<field name="vendor_name"/>
+					<field name="score"/>
+				</list>
+			</field>
+		</record>
+	</data>
+</odoo>

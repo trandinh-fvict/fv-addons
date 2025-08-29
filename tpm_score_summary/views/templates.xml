@@ -1,0 +1,285 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+	<data>
+		<!-- Evaluation Matrix Template -->
+		<template id="evaluation_matrix_template" name="Vendor Evaluation Matrix">
+			<t t-call="web.frontend_layout">
+				<t t-set="title">成果発表用採点表</t>
+				<div class="container-fluid vem-container">
+					<div class="row">
+						<div class="col-12">
+							<div class="card vem-card">
+								<div class="card-header vem-card-header">
+									<h1 class="card-title vem-card-title">
+										成果発表用採点表
+										<t t-esc="datetime.datetime.now().strftime('%Y年%m月')"/>
+									</h1>
+								</div>
+								<div class="card-body">
+									<t t-if="evaluation.state == 'draft'">
+										<div class="alert vem-alert vem-alert-info">
+											<i class="fa fa-info-circle vem-icon"/>
+											CHÚ Ý: Thời gian phát biểu được tính theo block 60giây(s) muộn 60s trừ 1
+											điểm.
+											<br/>
+											注意１：発表時間を超過した場合は、60秒刻みに１点ずつ減点とする
+										</div>
+									</t>
+									<t t-else="">
+										<div class="alert vem-alert vem-alert-warning">
+											<i class="fa fa-lock vem-icon"/>
+											This evaluation is in
+											<strong>
+												<t t-esc="evaluation.state"/>
+											</strong>
+											state and cannot be modified.
+										</div>
+									</t>
+
+									<!-- Evaluation Matrix Table -->
+									<div class="table-responsive vem-table-container">
+										<table class="table table-bordered table-striped vem-table"
+										       id="evaluation_matrix"
+										       t-att-data-evaluation-id="evaluation.id">
+											<thead class="vem-table-header">
+												<tr>
+													<th class="vem-col-question" scope="col">質問<br/>Câu hỏi
+													</th>
+													<t t-foreach="evaluation.vendor_ids" t-as="vendor">
+														<th class="vem-col-vendor vem-team-header" scope="col">
+															<div class="vem-team-name">
+																<t t-esc="vendor.name"/>
+															</div>
+														</th>
+													</t>
+												</tr>
+											</thead>
+											<tbody>
+												<t t-foreach="questions" t-as="question">
+													<tr>
+														<td class="vem-question-cell">
+															<span class="vem-question-text">
+																<t t-esc="question.name"/>
+															</span>
+														</td>
+														<t t-foreach="evaluation.vendor_ids" t-as="vendor">
+															<td class="vem-team-cell">
+																<t t-set="line"
+																   t-value="matrix_data.get((question.id, vendor.id))"/>
+																<t t-if="evaluation.state == 'draft'">
+																	<input type="number"
+																	       class="form-control score-input"
+																	       t-att-data-question-id="question.id"
+																	       t-att-data-vendor-id="vendor.id"
+																	       t-att-data-line-id="line and line.id or 0"
+																	       t-att-value="line and line.score or 1"
+																	       min="1"
+																	       max="5"
+																	       step="1"
+																	       placeholder="1-5"/>
+																</t>
+																<t t-else="">
+																	<span class="badge vem-badge vem-badge-primary vem-score-display">
+																		<t t-esc="line and line.score or 1"/>
+																	</span>
+																</t>
+															</td>
+														</t>
+													</tr>
+												</t>
+												<!-- Totals Row -->
+												<tr class="table-success vem-totals-row">
+													<td class="vem-totals-label">
+														<strong>合計点<br/>Tổng điểm
+														</strong>
+													</td>
+													<t t-foreach="evaluation.vendor_ids" t-as="vendor">
+														<td class="vem-totals-cell">
+															<span class="badge vem-badge vem-badge-success vem-total-score"
+															      t-att-id="'total_' + str(vendor.id)">
+																<t t-set="vendor_total"
+																   t-value="vendor_totals.get(vendor.id, 0)"/>
+																<t t-esc="vendor_total"/>
+															</span>
+														</td>
+													</t>
+												</tr>
+											</tbody>
+										</table>
+									</div>
+
+									<!-- Action Buttons -->
+									<div class="row vem-actions">
+										<div class="col-12">
+											<a t-attf-href="/web#id=#{evaluation.id}&amp;view_type=form&amp;model=vem.evaluation"
+											   class="btn vem-btn vem-btn-secondary">
+												<i class="fa fa-arrow-left vem-icon"/>
+												Back
+											</a>
+											<t t-if="evaluation.state == 'draft'">
+												<button type="button"
+												        class="btn vem-btn vem-btn-success vem-btn-spacing"
+												        id="submit_evaluation">
+													<i class="fa fa-check vem-icon"/>
+													Submit
+												</button>
+											</t>
+											<!--											<t t-if="evaluation.state == 'submitted'">-->
+											<!--												<button type="button" class="btn vem-btn vem-btn-info vem-btn-spacing"-->
+											<!--												        onclick="window.print()">-->
+											<!--													<i class="fa fa-print vem-icon"/>-->
+											<!--													Print -->
+											<!--												</button>-->
+											<!--											</t>-->
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</t>
+		</template>
+
+		<!-- TPM Evaluation Summary Template -->
+		<template id="multi_summary_template" name="TPM Evaluation Summary">
+			<t t-call="web.frontend_layout">
+				<t t-set="title">TPM Evaluation Summary</t>
+				<div class="container-fluid vem-container">
+					<div class="row">
+						<div class="col-12">
+							<div class="card vem-card">
+								<div class="card-header vem-card-header">
+									<h1 class="card-title vem-card-title">
+										<i class="fa fa-trophy vem-icon"/>
+										成果発表 評価集計表<br/>Bảng tổng hợp đánh giá phát biểu TPM
+									</h1>
+								</div>
+								<div class="card-body">
+									<!-- Calculate highest scoring team -->
+									<t t-set="max_score"
+									   t-value="max(summary_data['team_totals'].values()) if summary_data['team_totals'] else 0"/>
+									<t t-set="highest_teams"
+									   t-value="[team_id for team_id, score in summary_data['team_totals'].items() if score == max_score]"/>
+
+									<!-- Summary Table -->
+									<div class="table-responsive vem-table-container">
+										<h2>集計表<br/>Bảng tổng hợp
+										</h2>
+										<table class="table table-bordered table-striped vem-table"
+										       id="multiSummaryTable">
+											<thead class="vem-table-header">
+												<tr>
+													<th class="vem-th">採点者<br/>Người chấm điểm
+													</th>
+													<t t-foreach="summary_data['teams']" t-as="team">
+														<th t-attf-class="vem-th text-center #{team.id in highest_teams and 'highest-score-header' or ''}">
+															<t t-esc="team.name"/>
+															<t t-if="team.id in highest_teams">
+																<span class="highest-score-badge">TOP</span>
+															</t>
+														</th>
+													</t>
+												</tr>
+											</thead>
+											<tbody>
+												<t t-foreach="summary_data['evaluators']" t-as="evaluator">
+													<tr>
+														<td class="vem-td-evaluator">
+															<t t-esc="evaluator['name']"/>
+														</td>
+														<t t-foreach="summary_data['teams']" t-as="team">
+															<td t-attf-class="vem-td text-center #{team.id in highest_teams and 'highest-score-cell' or ''}">
+																<t t-esc="evaluator['team_scores'].get(team.id, 0)"/>
+															</td>
+														</t>
+													</tr>
+												</t>
+												<!-- Total Row -->
+												<tr class="table-info">
+													<td class="vem-td">合計点<br/>Tổng điểm
+													</td>
+													<t t-foreach="summary_data['teams']" t-as="team">
+														<td t-attf-class="vem-td text-center #{team.id in highest_teams and 'highest-score-total' or ''}">
+															<t t-esc="summary_data['team_totals'].get(team.id, 0)"/>
+														</td>
+													</t>
+												</tr>
+											</tbody>
+										</table>
+									</div>
+
+									<!-- Detailed Scores by Evaluator -->
+									<div class="mt-4">
+										<h4>採点表<br/>Bảng điểm chi tiết
+										</h4>
+										<t t-foreach="summary_data['evaluations']" t-as="eval_item">
+											<div class="card mt-3">
+												<div class="card-header">
+													<h5>
+														<t t-esc="eval_item.evaluator_name"/>
+														(<t t-esc="eval_item.name"/>)
+													</h5>
+												</div>
+												<div class="card-body">
+													<div class="table-responsive">
+														<table class="table table-sm table-bordered">
+															<thead>
+																<tr>
+																	<th class="vem-col-question">質問<br/>Câu hỏi
+																	</th>
+																	<t t-foreach="summary_data['teams']" t-as="team">
+																		<th class="vem-col-cell">
+																			<t t-esc="team.name"/>
+																		</th>
+																	</t>
+																</tr>
+															</thead>
+															<tbody>
+																<t t-foreach="summary_data['questions']"
+																   t-as="question">
+																	<tr>
+																		<td class="vem-question-text">
+																			<t t-esc="question.name"/>
+																		</td>
+																		<t t-foreach="summary_data['teams']"
+																		   t-as="team">
+																			<t t-set="score_line"
+																			   t-value="eval_item.line_ids.filtered(lambda l: l.question_id.id == question.id and l.vendor_id.id == team.id)"/>
+																			<td class="vem-col-cell">
+																				<t t-if="score_line">
+																					<t t-esc="score_line[0].score"/>
+																				</t>
+																				<t t-else="">-</t>
+																			</td>
+																		</t>
+																	</tr>
+																</t>
+															</tbody>
+														</table>
+													</div>
+												</div>
+											</div>
+										</t>
+									</div>
+
+									<!-- Action Buttons -->
+									<div class="mt-3">
+										<button type="button" class="btn btn-primary" onclick="window.close()">
+											<i class="fa fa-times"/>
+											Close
+										</button>
+										<!--										<button type="button" class="btn btn-primary" onclick="window.print()">-->
+										<!--											<i class="fa fa-print"/>-->
+										<!--											Print-->
+										<!--										</button>-->
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</t>
+		</template>
+	</data>
+</odoo>
