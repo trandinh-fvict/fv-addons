@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Email Template for Acknowledgement -->
+        <record id="email_template_suggestion_acknowledgement" model="mail.template">
+            <field name="name">Suggestion Acknowledgement</field>
+            <field name="model_id" ref="suggestion_box.model_suggestion_suggestion"/>
+            <field name="subject">Thank you for your suggestion!</field>
+            <field name="email_to">${object.owner_id.email_formatted | safe}</field>
+            <field name="body_html"><![CDATA[
+<p>Dear ${object.owner_id.name},</p>
+<p>Thank you for your suggestion titled "${object.name}". We have received it and will review it shortly.</p>
+<p>Best regards,<br/>The Suggestion Box Team</p>
+]]></field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+
+        <!-- Email Template for Status Change -->
+        <record id="email_template_suggestion_status_change" model="mail.template">
+            <field name="name">Suggestion Status Changed</field>
+            <field name="model_id" ref="suggestion_box.model_suggestion_suggestion"/>
+            <field name="subject">Suggestion status updated: ${object.name}</field>
+            <field name="email_to">${object.owner_id.email_formatted | safe},${object.assigned_id.email_formatted | safe}</field>
+            <field name="body_html"><![CDATA[
+<p>Hello,</p>
+<p>The status of the suggestion "${object.name}" has been changed to <strong>${object.state}</strong>.</p>
+<p>You can view the suggestion here: <a href="${object.get_portal_url()}">View Suggestion</a></p>
+<p>Thank you</p>
+]]></field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+
+        <!-- Automated Activity -->
+        <record id="activity_suggestion_follow_up" model="mail.activity.type">
+            <field name="name">Follow up on new suggestion</field>
+            <field name="res_model_id" ref="suggestion_box.model_suggestion_suggestion"/>
+            <field name="delay_count">3</field>
+            <field name="delay_unit">days</field>
+            <field name="summary">Follow up on new suggestion</field>
+        </record>
+
+        <!-- Server Action to Escalate Stale Suggestions -->
+        <record id="ir_cron_escalate_stale_suggestions" model="ir.cron">
+            <field name="name">Escalate Stale Suggestions</field>
+            <field name="model_id" ref="model_suggestion_suggestion"/>
+            <field name="state">code</field>
+            <field name="code">model.search([('state', '=', 'new'), ('create_date', '&lt;=', fields.Datetime.now() - env['ir.config_parameter'].sudo().get_param('suggestion_box.sla_days') or 7)])._cron_escalate()</field>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+        </record>
+    </data>
+</odoo>
