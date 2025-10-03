@@ -1,0 +1,5 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_suggestion_user,suggestion.suggestion user,model_suggestion_suggestion,base.group_user,1,1,1,0
+access_suggestion_manager,suggestion.suggestion manager,model_suggestion_suggestion,suggestion_box.group_suggestion_manager,1,1,1,1
+access_category_user,suggestion.category user,model_suggestion_category,base.group_user,1,0,0,0
+access_category_manager,suggestion.category manager,model_suggestion_category,suggestion_box.group_suggestion_manager,1,1,1,1

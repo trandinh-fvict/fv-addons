@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <!-- Main Menu -->
+        <menuitem id="suggestion_box_menu_root"
+            name="Suggestion Box"
+            sequence="10"/>
+
+        <!-- Suggestions Menu -->
+        <menuitem id="suggestion_suggestion_menu"
+            name="Suggestions"
+            parent="suggestion_box_menu_root"
+            action="suggestion_suggestion_action"
+            sequence="10"/>
+
+        <!-- Taxonomy Menu -->
+        <menuitem id="suggestion_category_menu"
+            name="Taxonomy"
+            parent="suggestion_box_menu_root"
+            action="suggestion_category_action"
+            groups="suggestion_box.group_suggestion_manager"
+            sequence="20"/>
+
+        <!-- Configuration Menu -->
+        <menuitem id="suggestion_config_menu"
+            name="Configuration"
+            parent="suggestion_box_menu_root"
+            sequence="100"
+            groups="base.group_system"/>
+
+        <menuitem id="suggestion_settings_menu"
+            name="Settings"
+            parent="suggestion_config_menu"
+            action="suggestion_box_config_settings_action"
+            sequence="10"/>
+
+    </data>
+</odoo>

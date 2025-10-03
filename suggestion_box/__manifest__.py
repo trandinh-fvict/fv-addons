@@ -1,0 +1,25 @@
+{
+    'name': 'Suggestion Box',
+    'version': '18.0.1.0.0',
+    'summary': 'A suggestion box module for Odoo 18',
+    'author': 'Jules',
+    'license': 'AGPL-3',
+    'depends': [
+        'base',
+        'mail',
+        'website',
+        'portal',
+    ],
+    'data': [
+        'security/ir.model.access.csv',
+        'security/suggestion_security.xml',
+        'data/suggestion_data.xml',
+        'views/suggestion_views.xml',
+        'views/category_views.xml',
+        'views/menus.xml',
+        'views/res_config_settings_views.xml',
+        'views/website_templates.xml',
+    ],
+    'installable': True,
+    'application': True,
+}

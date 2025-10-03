@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="suggestion_submit_form_template" name="Suggestion Box">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <div class="container">
+                    <h1>Submit a Suggestion</h1>
+                    <form action="/suggestion/process" method="post" enctype="multipart/form-data" class="form-horizontal mt32">
+                        <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                        <div class="form-group">
+                            <label class="col-md-3 col-sm-4 control-label" for="name">Title</label>
+                            <div class="col-md-7 col-sm-8">
+                                <input type="text" class="form-control" name="name" required="1"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-3 col-sm-4 control-label" for="category_id">Category</label>
+                            <div class="col-md-7 col-sm-8">
+                                <select name="category_id" class="form-control" id="category_id">
+                                    <option value="">Select Category...</option>
+                                    <t t-foreach="categories" t-as="category">
+                                        <option t-att-value="category.id"><t t-esc="category.name"/></option>
+                                    </t>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-3 col-sm-4 control-label" for="area_id">Area</label>
+                            <div class="col-md-7 col-sm-8">
+                                <select name="area_id" class="form-control" id="area_id">
+                                    <option value="">Select Area...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-3 col-sm-4 control-label" for="item_id">Item</label>
+                            <div class="col-md-7 col-sm-8">
+                                <select name="item_id" class="form-control" id="item_id">
+                                    <option value="">Select Item...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-3 col-sm-4 control-label" for="description">Description</label>
+                            <div class="col-md-7 col-sm-8">
+                                <textarea class="form-control" name="description" rows="5"></textarea>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="col-md-3 col-sm-4 control-label" for="image">Image</label>
+                            <div class="col-md-7 col-sm-8">
+                                <input type="file" class="form-control" name="image"/>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-offset-3 col-sm-offset-4 col-sm-8 col-md-7">
+                                <div class="checkbox">
+                                    <label>
+                                        <input type="checkbox" name="anonymous" value="1"/> Submit Anonymously
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-offset-3 col-md-7 col-sm-offset-4 col-sm-8">
+                                <button type="submit" class="btn btn-primary">Submit</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            <script>
+                odoo.define('suggestion_box.cascading_dropdowns', function (require) {
+                    "use strict";
+                    var ajax = require('web.ajax');
+
+                    $('#category_id').on('change', function() {
+                        var category_id = $(this).val();
+                        ajax.jsonRpc('/suggestion/get_areas', 'call', {'category_id': category_id})
+                            .then(function(data) {
+                                var $area_select = $('#area_id');
+                                $area_select.empty().append($('<option/>', { value: '', text: 'Select Area...' }));
+                                data.forEach(function(area) {
+                                    $area_select.append($('<option/>', {
+                                        value: area.id,
+                                        text: area.name
+                                    }));
+                                });
+                                $('#item_id').empty().append($('<option/>', { value: '', text: 'Select Item...' }));
+                            });
+                    });
+
+                    $('#area_id').on('change', function() {
+                        var area_id = $(this).val();
+                        ajax.jsonRpc('/suggestion/get_items', 'call', {'area_id': area_id})
+                            .then(function(data) {
+                                var $item_select = $('#item_id');
+                                $item_select.empty().append($('<option/>', { value: '', text: 'Select Item...' }));
+                                data.forEach(function(item) {
+                                    $item_select.append($('<option/>', {
+                                        value: item.id,
+                                        text: item.name
+                                    }));
+                                });
+                            });
+                    });
+                });
+            </script>
+        </t>
+    </template>
+
+    <template id="suggestion_thank_you_template" name="Thank You">
+        <t t-call="website.layout">
+            <div id="wrap">
+                <div class="container">
+                    <h1>Thank You!</h1>
+                    <p>Your suggestion has been submitted successfully.</p>
+                    <a href="/suggestion/submit" class="btn btn-primary">Submit another suggestion</a>
+                </div>
+            </div>
+        </t>
+    </template>
+</odoo>
