@@ -19,7 +19,17 @@ _rate_limit_max_requests = 100  # max requests per window (increased from 30)
 class VendorEvaluationController(http.Controller):
 
     def _check_rate_limit(self, user_id):
-        """Simple rate limiting to prevent rapid-fire requests"""
+        """
+        Checks if a user has exceeded the rate limit for requests.
+        This function implements a simple rate limiting mechanism to prevent
+        abuse from rapid-fire requests. It tracks the number of requests made
+        by a user within a specific time window and blocks further requests if
+        the limit is exceeded.
+        Args:
+            user_id (int): The ID of the user to check.
+        Returns:
+            bool: True if the user is within the rate limit, False otherwise.
+        """
         current_time = time.time()
         user_requests = _rate_limit_storage[user_id]
 
@@ -40,7 +50,18 @@ class VendorEvaluationController(http.Controller):
 
     @http.route('/vem/eval/<int:evaluation_id>', type='http', auth='user', website=True)
     def evaluation_matrix(self, evaluation_id, **kwargs):
-        """Display the evaluation matrix for a specific evaluation"""
+        """
+        Displays the evaluation matrix for a specific evaluation.
+        This function retrieves the evaluation record, checks for access
+        rights, and then prepares the data needed to render the evaluation
+        matrix template. This includes the list of questions, the matrix data,
+        and the total scores for each vendor.
+        Args:
+            evaluation_id (int): The ID of the evaluation to display.
+            **kwargs: Additional keyword arguments.
+        Returns:
+            odoo.http.Response: The rendered evaluation matrix template.
+        """
         try:
             # Get the evaluation record
             evaluation = request.env['vem.evaluation'].browse(evaluation_id)
@@ -87,7 +108,20 @@ class VendorEvaluationController(http.Controller):
 
     @http.route('/vem/eval/<int:evaluation_id>/save', type='json', auth='user', methods=['POST'])
     def save_evaluation_score(self, evaluation_id, **kwargs):
-        """Save or update a single evaluation score"""
+        """
+        Saves or updates a single evaluation score.
+        This function handles the saving of a score for a specific question
+        and vendor in an evaluation. It performs rate limiting, validation,
+        and access control checks before creating or updating the evaluation
+        line.
+        Args:
+            evaluation_id (int): The ID of the evaluation.
+            **kwargs: A dictionary containing the question_id, vendor_id, and
+                      score.
+        Returns:
+            dict: A JSON response indicating the success or failure of the
+                  operation, along with the updated vendor totals.
+        """
         try:
             # Rate limiting check
             if not self._check_rate_limit(request.env.user.id):
@@ -179,7 +213,18 @@ class VendorEvaluationController(http.Controller):
 
     @http.route('/vem/eval/<int:evaluation_id>/submit', type='json', auth='user', methods=['POST'])
     def submit_evaluation(self, evaluation_id, **kwargs):
-        """Submit evaluation for approval"""
+        """
+        Submits an evaluation for approval.
+        This function changes the state of an evaluation from 'draft' to
+        'submitted'. It performs access control checks to ensure that only
+        authorized users can submit evaluations.
+        Args:
+            evaluation_id (int): The ID of the evaluation to submit.
+            **kwargs: Additional keyword arguments.
+        Returns:
+            dict: A JSON response indicating the success or failure of the
+                  operation.
+        """
         try:
             # Get the evaluation record
             evaluation = request.env['vem.evaluation'].browse(evaluation_id)
@@ -209,7 +254,19 @@ class VendorEvaluationController(http.Controller):
 
     @http.route('/vem/eval/<int:evaluation_id>/approve', type='json', auth='user', methods=['POST'])
     def approve_evaluation(self, evaluation_id, **kwargs):
-        """Approve the evaluation (Manager only)"""
+        """
+        Approves an evaluation.
+        This function is restricted to users with the 'manager' role. It
+        changes the state of an evaluation from 'submitted' to 'approved'.
+        Access control checks are performed to ensure that only authorized
+        managers can approve evaluations.
+        Args:
+            evaluation_id (int): The ID of the evaluation to approve.
+            **kwargs: Additional keyword arguments.
+        Returns:
+            dict: A JSON response indicating the success or failure of the
+                  operation.
+        """
         try:
             # Check if user is manager
             if not request.env.user.has_group('tpm_score_summary.group_vem_manager'):
@@ -239,7 +296,18 @@ class VendorEvaluationController(http.Controller):
 
     @http.route('/vem/tpm_summary', type='http', auth='user', website=True, methods=['GET', 'POST'])
     def tpm_evaluation_summary(self, **kwargs):
-        """Display TPM evaluation summary for multiple evaluations"""
+        """
+        Displays a summary of multiple TPM evaluations.
+        This function retrieves the summary data for a list of evaluations and
+        renders a template to display the information. It performs access
+        control checks to ensure that the user has the right to view the
+        evaluations.
+        Args:
+            **kwargs: A dictionary containing the 'evaluation_ids' as a
+                      comma-separated string.
+        Returns:
+            odoo.http.Response: The rendered summary template.
+        """
         try:
             # Get evaluation IDs from POST data or GET parameters
             evaluation_ids = kwargs.get('evaluation_ids', '')
