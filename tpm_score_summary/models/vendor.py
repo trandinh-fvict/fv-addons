@@ -5,6 +5,12 @@ from odoo.exceptions import ValidationError
 
 
 class VendorEvalVendor(models.Model):
+    """
+    Represents a vendor or team that can be evaluated.
+    This model stores information about the vendors, including their name,
+    code, and active status. It also includes a computed field to count the
+    number of evaluations a vendor is a part of.
+    """
     _name = 'vem.vendor'
     _description = 'Team for Evaluation'
     _order = 'name'
@@ -40,6 +46,12 @@ class VendorEvalVendor(models.Model):
 
     @api.depends('name')
     def _compute_evaluation_count(self):
+        """
+        Computes the number of evaluations this vendor is a part of.
+        This method counts the number of evaluation lines that are associated
+        with the current vendor and sets the `evaluation_count` field
+        accordingly.
+        """
         for vendor in self:
             count = self.env['vem.evaluation.line'].search_count([
                 ('vendor_id', '=', vendor.id)

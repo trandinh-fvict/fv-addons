@@ -18,7 +18,12 @@ $(document).ready(function() {
         initializeEvaluationMatrix();
     }, 100);
 });
-
+/**
+ * Initializes the evaluation matrix functionality.
+ * This function sets up event handlers for score inputs and the submit button
+ * on the evaluation matrix page. It uses debouncing to prevent excessive
+ * server requests when a user is typing in scores.
+ */
 function initializeEvaluationMatrix() {
     const $matrix = $('#evaluation_matrix');
 
@@ -74,7 +79,12 @@ function initializeEvaluationMatrix() {
         handleSubmitEvaluation($(event.currentTarget), evaluationId);
     });
 }
-
+/**
+ * Validates a score to ensure it is a whole number between 1 and 5.
+ * @param {string} score - The score to validate.
+ * @returns {object} An object with a 'valid' boolean and a 'message' string
+ *                   if the score is invalid.
+ */
 function validateScore(score) {
     const numScore = parseFloat(score);
 
@@ -95,7 +105,14 @@ function validateScore(score) {
 
     return { valid: true, score: numScore };
 }
-
+/**
+ * Checks if a request should be rate-limited.
+ * This function implements a simple rate limiting mechanism to prevent
+ * excessive server requests from a single input field.
+ * @param {string} inputId - The ID of the input field to check.
+ * @returns {boolean} True if the request should be rate-limited, false
+ *                    otherwise.
+ */
 function isRateLimited(inputId) {
     const now = Date.now();
     const windowStart = now - RATE_LIMIT_WINDOW;
@@ -123,6 +140,14 @@ function isRateLimited(inputId) {
     return false;
 }
 
+/**
+ * Validates a score input and handles the change.
+ * This function is called when a score input changes. It validates the new
+ * score, and if it is valid, it either saves the score immediately or queues
+ * it for later if the rate limit has been exceeded.
+ * @param {jQuery} $input - The jQuery object for the score input.
+ * @param {number} evaluationId - The ID of the evaluation.
+ */
 function validateAndHandleScoreChange($input, evaluationId) {
     const inputValue = $input.val().trim();
     const inputId = $input.data('question-id') + '_' + $input.data('vendor-id');
@@ -152,7 +177,14 @@ function validateAndHandleScoreChange($input, evaluationId) {
 
     saveScore($input, evaluationId, validation.score);
 }
-
+/**
+ * Queues a score update to be processed later.
+ * This function is used when the rate limit has been exceeded. It adds the
+ * score update to a queue, which is processed asynchronously.
+ * @param {jQuery} $input - The jQuery object for the score input.
+ * @param {number} evaluationId - The ID of the evaluation.
+ * @param {number} score - The score to be saved.
+ */
 function queueScoreUpdate($input, evaluationId, score) {
     const updateData = {
         $input,
@@ -167,7 +199,12 @@ function queueScoreUpdate($input, evaluationId, score) {
         processQueue();
     }
 }
-
+/**
+ * Processes the queue of score updates.
+ * This function is called asynchronously to process the score updates that
+ * have been queued due to rate limiting. It processes one update at a time
+ * and then schedules itself to run again after a delay.
+ */
 function processQueue() {
     if (saveQueue.length === 0) {
         isProcessingQueue = false;
@@ -186,6 +223,16 @@ function processQueue() {
     setTimeout(processQueue, 500);
 }
 
+/**
+ * Saves a score to the server using an AJAX request.
+ * This function sends the score to the server to be saved. It includes retry
+ * logic with exponential backoff to handle network errors.
+ * @param {jQuery} $input - The jQuery object for the score input.
+ * @param {number} evaluationId - The ID of the evaluation.
+ * @param {number} score - The score to be saved.
+ * @returns {Promise} A promise that resolves when the score is saved
+ *                    successfully.
+ */
 function saveScore($input, evaluationId, score) {
     const questionId = $input.data('question-id');
     const vendorId = $input.data('vendor-id');
@@ -265,7 +312,14 @@ function saveScore($input, evaluationId, score) {
 
     return tryWithRetry();
 }
-
+/**
+ * Validates all scores on the page.
+ * This function iterates through all score inputs and validates them. It
+ * returns an object indicating whether all scores are valid and a list of
+ * any invalid inputs.
+ * @returns {object} An object with a 'valid' boolean and a list of
+ *                   'invalidInputs'.
+ */
 function validateAllScores() {
     let hasInvalidScores = false;
     const invalidInputs = [];
@@ -291,7 +345,14 @@ function validateAllScores() {
 
     return { valid: !hasInvalidScores, invalidInputs: invalidInputs };
 }
-
+/**
+ * Handles the submission of an evaluation.
+ * This function is called when the user clicks the submit button. It validates
+ * all scores, asks for confirmation, and then sends an AJAX request to submit
+ * the evaluation.
+ * @param {jQuery} $button - The jQuery object for the submit button.
+ * @param {number} evaluationId - The ID of the evaluation.
+ */
 function handleSubmitEvaluation($button, evaluationId) {
     if (!evaluationId) {
         alert('Error: Evaluation ID not found');

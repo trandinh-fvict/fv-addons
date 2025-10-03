@@ -4,7 +4,25 @@ import { append, createElement, setAttributes } from '@web/core/utils/xml';
 
 import {FormCompiler} from '@web/views/form/form_compiler';
 
+/**
+ * Patches the FormCompiler to modify the form view's XML structure based on the
+ * chatter position setting.
+ * This patch extends the `compile` method to adjust the chatter's placement
+ * and behavior. If the chatter is positioned at the bottom, it moves the
+ * chatter component within the form sheet. If it's positioned on the side, it
+ * adds a resize handle.
+ */
 patch(FormCompiler.prototype, {
+    /**
+     * Extends the compile method to modify the form's XML for chatter placement.
+     * This function first calls the original compile method, then inspects the
+     * resulting XML. Based on the `chatter_position` in the session, it either
+     * moves the chatter to the bottom of the form or adds a resize handle for
+     * the side chatter.
+     * @param {Element} node - The XML element to compile.
+     * @param {object} params - The compilation parameters.
+     * @returns {Element} The modified XML element.
+     */
     compile(node, params) {
         const res = super.compile(node, params);
         const chatterContainerHookXml = res.querySelector(

@@ -6,6 +6,11 @@ import json
 
 
 class VendorEvalQuestion(models.Model):
+    """
+    Represents an evaluation question used in the vendor evaluation matrix.
+    This model stores the questions that are used to evaluate vendors, along
+    with their sequence and active status.
+    """
     _name = 'vem.eval.question'
     _description = 'Evaluation Question'
     _order = 'sequence, id'
@@ -28,6 +33,13 @@ class VendorEvalQuestion(models.Model):
 
 
 class VendorEvaluation(models.Model):
+    """
+    Represents a vendor evaluation, which is a collection of scores for
+    multiple vendors across a set of questions.
+    This model manages the entire evaluation process, from creation to
+    submission and approval. It also includes methods for calculating total
+    scores, generating summary data, and handling the evaluation matrix view.
+    """
     _name = 'vem.evaluation'
     _description = 'Team Evaluation'
     _order = 'create_date desc'
@@ -80,6 +92,17 @@ class VendorEvaluation(models.Model):
 
     @api.model_create_multi
     def create(self, vals_list):
+        """
+        Overrides the create method to assign a unique sequence number to each
+        new evaluation.
+        This ensures that each evaluation has a unique name based on the
+        'vem.evaluation' sequence.
+        Args:
+            vals_list (list): A list of dictionaries of values to create new
+                              records.
+        Returns:
+            recordset: The newly created evaluation records.
+        """
         for vals in vals_list:
             if vals.get('name', ' ') == ' ':
                 vals['name'] = self.env['ir.sequence'].next_by_code('vem.evaluation') or ' '
@@ -87,6 +110,13 @@ class VendorEvaluation(models.Model):
 
     @api.depends('line_ids.score')
     def _compute_total_scores(self):
+        """
+        Computes the total scores for each vendor in the evaluation and stores
+        them as a JSON string.
+        This method calculates the total score, max possible score, and the
+        percentage score for each vendor and stores the result in the
+        `total_scores` field.
+        """
         for evaluation in self:
             totals = {}
             for vendor in evaluation.vendor_ids:
@@ -102,17 +132,31 @@ class VendorEvaluation(models.Model):
 
     @api.depends('line_ids')
     def _compute_line_count(self):
+        """
+        Computes the total number of evaluation lines for the current evaluation.
+        This method is used to display the number of lines in the evaluation
+        form view.
+        """
         for evaluation in self:
             evaluation.line_count = len(evaluation.line_ids)
 
     @api.onchange('vendor_ids')
     def _onchange_vendor_ids(self):
-        """When vendors change, recreate evaluation lines"""
+        """
+        Handles the onchange event for the `vendor_ids` field.
+        When the list of vendors to be evaluated changes, this method triggers
+        the creation of new evaluation lines for the added vendors.
+        """
         if self.vendor_ids and self._origin.id:
             self._create_evaluation_lines()
 
     def _create_evaluation_lines(self):
-        """Create evaluation lines for all combinations of questions and vendors"""
+        """
+        Creates evaluation lines for all combinations of questions and vendors.
+        This method ensures that an evaluation line exists for each active
+        question and each selected vendor. It only creates lines that do not
+        already exist, preserving any existing scores.
+        """
         if not self.vendor_ids:
             return
 
@@ -141,7 +185,14 @@ class VendorEvaluation(models.Model):
             self.env['vem.evaluation.line'].create(lines_to_create)
 
     def action_open_matrix(self):
-        """Open the matrix view for evaluation"""
+        """
+        Opens the evaluation matrix view in a new browser tab.
+        This action ensures that at least one vendor is selected, creates any
+        missing evaluation lines, and then redirects the user to the
+        evaluation matrix page.
+        Returns:
+            dict: An action dictionary to open the evaluation matrix URL.
+        """
         self.ensure_one()
         if not self.vendor_ids:
             raise UserError("Please select at least one vendor before opening the evaluation matrix.")
@@ -156,7 +207,12 @@ class VendorEvaluation(models.Model):
         }
 
     def action_submit(self):
-        """Submit and approve the evaluation (final state)"""
+        """
+        Submits the evaluation and sets its state to 'submitted'.
+        This action validates that all evaluation lines have been filled in
+        with valid scores before changing the state. Once submitted, the
+        evaluation is considered final and approved.
+        """
         self.ensure_one()
 
         # Refresh data to ensure we have latest scores
@@ -183,7 +239,11 @@ class VendorEvaluation(models.Model):
         })
 
     def action_reset_to_draft(self):
-        """Reset to draft state"""
+        """
+        Resets the evaluation back to the 'draft' state.
+        This action allows a submitted or approved evaluation to be moved back
+        to the draft state, so that it can be modified again.
+        """
         self.ensure_one()
         self.write({
             'state': 'draft',
@@ -192,7 +252,14 @@ class VendorEvaluation(models.Model):
         })
 
     def get_summary_data(self):
-        """Get structured data for summary report"""
+        """
+        Retrieves structured data for the evaluation summary report.
+        This method compiles all the necessary data for a single evaluation
+        summary, including information about the evaluator, teams, questions,
+        and scores.
+        Returns:
+            dict: A dictionary containing the structured summary data.
+        """
         self.ensure_one()
 
         # Get all evaluators (people who scored)
@@ -242,7 +309,17 @@ class VendorEvaluation(models.Model):
 
     @api.model
     def get_multi_evaluation_summary(self, evaluation_ids):
-        """Get summary data for multiple evaluations"""
+        """
+        Retrieves summary data for multiple evaluations.
+        This method compiles all the necessary data for a multi-evaluation
+        summary, including information about all evaluators, teams, questions,
+        and scores.
+        Args:
+            evaluation_ids (list): A list of IDs of the evaluations to include
+                                   in the summary.
+        Returns:
+            dict: A dictionary containing the structured summary data.
+        """
         evaluations = self.browse(evaluation_ids)
 
         if not evaluations.exists():
@@ -289,7 +366,13 @@ class VendorEvaluation(models.Model):
         return summary_data
 
     def action_summary_preview(self):
-        """Open summary preview for multiple evaluations"""
+        """
+        Opens a summary preview for multiple evaluations in a new browser tab.
+        This action generates a URL for the multi-evaluation summary page and
+        returns an action dictionary to open the URL.
+        Returns:
+            dict: An action dictionary to open the summary preview URL.
+        """
         evaluation_ids = self.ids
 
         if not evaluation_ids:
@@ -306,6 +389,20 @@ class VendorEvaluation(models.Model):
 
     @api.model
     def save_score(self, evaluation_id, question_id, vendor_id, score):
+        """
+        Saves a score for a specific evaluation, question, and vendor.
+        This method is designed to be called from the client-side to save
+        scores asynchronously. It performs validation to ensure that the
+        evaluation is in the correct state and that the score is valid.
+        Args:
+            evaluation_id (int): The ID of the evaluation.
+            question_id (int): The ID of the question.
+            vendor_id (int): The ID of the vendor.
+            score (int or float): The score to be saved.
+        Returns:
+            dict: A dictionary indicating the success or failure of the
+                  operation.
+        """
         try:
             evaluation = self.browse(evaluation_id)
 
@@ -346,6 +443,13 @@ class VendorEvaluation(models.Model):
 
 
 class VendorEvaluationLine(models.Model):
+    """
+    Represents a single line in a vendor evaluation, corresponding to a score
+    for a specific question and vendor.
+    This model stores the individual scores that make up a vendor evaluation.
+    It includes constraints to ensure data integrity, such as a valid score
+    range and uniqueness of the evaluation-question-vendor combination.
+    """
     _name = 'vem.evaluation.line'
     _description = 'Vendor Evaluation Line'
     _order = 'evaluation_id, question_id, vendor_id'
@@ -401,6 +505,11 @@ class VendorEvaluationLine(models.Model):
 
     @api.constrains('score')
     def _check_score(self):
+        """
+        Validates that the score is within the allowed range of 1 to 5.
+        This constraint ensures that all scores entered into the system are
+        valid.
+        """
         for line in self:
             if line.score < 1 or line.score > 5:
                 raise ValidationError("Score must be between 1 and 5")
