@@ -4,7 +4,7 @@
         <!-- Email Template for Acknowledgement -->
         <record id="email_template_suggestion_acknowledgement" model="mail.template">
             <field name="name">Suggestion Acknowledgement</field>
-            <field name="model_id" ref="suggestion_box.model_suggestion_suggestion"/>
+            <field name="model_id" ref="model_suggestion_suggestion"/>
             <field name="subject">Thank you for your suggestion!</field>
             <field name="email_to">${object.owner_id.email_formatted | safe}</field>
             <field name="body_html"><![CDATA[
@@ -18,7 +18,7 @@
         <!-- Email Template for Status Change -->
         <record id="email_template_suggestion_status_change" model="mail.template">
             <field name="name">Suggestion Status Changed</field>
-            <field name="model_id" ref="suggestion_box.model_suggestion_suggestion"/>
+            <field name="model_id" ref="model_suggestion_suggestion"/>
             <field name="subject">Suggestion status updated: ${object.name}</field>
             <field name="email_to">${object.owner_id.email_formatted | safe},${object.assigned_id.email_formatted | safe}</field>
             <field name="body_html"><![CDATA[
@@ -33,7 +33,7 @@
         <!-- Automated Activity -->
         <record id="activity_suggestion_follow_up" model="mail.activity.type">
             <field name="name">Follow up on new suggestion</field>
-            <field name="res_model_id" ref="suggestion_box.model_suggestion_suggestion"/>
+            <field name="res_model_id" ref="model_suggestion_suggestion"/>
             <field name="delay_count">3</field>
             <field name="delay_unit">days</field>
             <field name="summary">Follow up on new suggestion</field>
